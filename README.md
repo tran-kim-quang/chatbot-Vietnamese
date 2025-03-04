@@ -1,4 +1,4 @@
-## To deploy on website, run this code in terminal: "python -m uvicorn test2:app --reload"
+## To deploy on website, run this code in terminal: "python -m uvicorn (your_file_name):app --reload"
 
 ## This project have a basic html for demo with boostrap for chatbox. To using in website, run the code above and check the API its return and 
 change the API in this "fetch" function:
