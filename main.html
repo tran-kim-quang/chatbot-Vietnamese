@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assitant for COLOSHOP</title>
+  <!-- Link tới Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Định dạng kích thước cho khung chat */
+    .chat-container {
+      max-width: 400px;
+      height: 600px;
+    }
+    .chat-messages {
+      height: calc(100% - 120px);
+      overflow-y: auto;
+      background-color: #e5ddd5;
+      padding: 10px;
+    }
+    /* Định dạng tin nhắn */
+    .message {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .message.user {
+      background-color: #0084ff;
+      color: #fff;
+    }
+    .message.bot {
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+    <div class="card chat-container shadow">
+      <div class="card-header bg-primary text-white text-center">
+        Nino
+      </div>
+      <div class="card-body chat-messages" id="chatMessages">
+        <!-- Các tin nhắn sẽ được thêm vào đây -->
+      </div>
+      <div class="card-footer">
+        <div class="input-group">
+          <input type="text" id="chatInputField" class="form-control" placeholder="Nhập tin nhắn...">
+          <button class="btn btn-primary" id="sendButton" onclick="sendMessage()">Gửi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle JS (bao gồm Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Hàm thêm tin nhắn vào khung chat
+    function appendMessage(sender, message) {
+      const chatMessages = document.getElementById("chatMessages");
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message", sender);
+      messageDiv.innerText = message;
+      
+      // Sử dụng container flex để căn chỉnh tin nhắn
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("d-flex", "w-100", sender === "user" ? "justify-content-end" : "justify-content-start");
+      wrapper.appendChild(messageDiv);
+      chatMessages.appendChild(wrapper);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Hàm gửi tin nhắn
+    function sendMessage() {
+      const inputField = document.getElementById("chatInputField");
+      const message = inputField.value.trim();
+      if (message === "") return;
+      
+      // Hiển thị tin nhắn của người dùng
+      appendMessage("user", message);
+      inputField.value = "";
+
+      // Hiển thị tin nhắn "Đang gửi..." từ bot
+      appendMessage("bot", "Đang gửi...");
+      
+      // Gửi yêu cầu đến API chatbot (thay URL nếu có API thực)
+      fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message })
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Xóa tin "Đang gửi..." trước đó
+        removeLastBotMessage();
+        appendMessage("bot", data.response || "Lỗi khi nhận phản hồi từ bot.");
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        removeLastBotMessage();
+        appendMessage("bot", "Lỗi khi gửi tin nhắn.");
+      });
+    }
+
+    // Hàm loại bỏ tin nhắn bot "Đang gửi..."
+    function removeLastBotMessage() {
+      const chatMessages = document.getElementById("chatMessages");
+      const wrappers = chatMessages.getElementsByClassName("d-flex");
+      if (wrappers.length > 0) {
+        const lastWrapper = wrappers[wrappers.length - 1];
+        if (lastWrapper.firstChild && lastWrapper.firstChild.classList.contains("bot") &&
+            lastWrapper.firstChild.innerText === "Đang gửi...") {
+          chatMessages.removeChild(lastWrapper);
+        }
+      }
+    }
+    document.getElementById("chatInputField").addEventListener("keyup", function(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
